@@ -17,10 +17,9 @@ func main() {
 	// r.HandleFunc("/createnote", controllers.CreateNote).Methods("POST")
 	r.HandleFunc("/getnote/{id}", controllers.GetNoteById).Methods("GET")
 	// r.HandleFunc("/updatenote/{id}", controllers.UpdateNote).Methods("POST")
-	// r.HandleFunc("/deletenote/{id}", controllers.DeleteNote).Methods("POST")
+	r.HandleFunc("/deletenote/{id}", controllers.DeleteNote).Methods("GET")
 
 	fmt.Println("Starting Server at port 8084...")
 	log.Fatal(http.ListenAndServe(":8083", r))
 	// controllers.GetNoteById()
-
 }

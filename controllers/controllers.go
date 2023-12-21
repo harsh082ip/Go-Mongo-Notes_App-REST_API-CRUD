@@ -134,3 +134,54 @@ func GetNotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+func DeleteNote(w http.ResponseWriter, r *http.Request) {
+
+	id := mux.Vars(r)
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found")
+	}
+
+	var uri string
+	if uri = os.Getenv("MONGODB_URI"); uri == "" {
+		log.Fatal("You must set your 'MONGODB_URI' environment variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
+	}
+
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		if err = client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+
+	coll := client.Database("sample_restaurants").Collection("restaurants")
+
+	objectID, err := primitive.ObjectIDFromHex(id["id"])
+	if err != nil {
+		panic(err)
+	}
+
+	filter := bson.D{{"_id", objectID}}
+	var deletedDocument Notes
+	err = coll.FindOneAndDelete(context.TODO(), filter).Decode(&deletedDocument)
+	if err != nil {
+		panic(err)
+	}
+
+	// Print the deleted document
+	output, err := bson.MarshalExtJSON(deletedDocument, false, false)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Deleted Document:\n%s\n", output)
+
+	// var delNote Notes
+	// _ = json.NewDecoder(deleteResult).Decode(delNote)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(output)
+}
