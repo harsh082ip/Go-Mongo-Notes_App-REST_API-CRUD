@@ -12,6 +12,7 @@ import (
 	// "encoding/json"
 
 	"github.com/gorilla/mux"
+	"github.com/harsh082ip/Go-Mongo-Notes_App-REST_API-CRUD/models"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,12 +21,12 @@ import (
 )
 
 // start-restaurant-struct
-type Notes struct {
-	Id    primitive.ObjectID `bson:"_id"`
-	Title string             `bson:"title,omitempty"`
-	Desc  string             `bson:"desc,omitempty"`
-	Time  string             `bson:"time,omitempty"`
-}
+// type Notes struct {
+// 	Id    primitive.ObjectID `bson:"_id"`
+// 	Title string             `bson:"title,omitempty"`
+// 	Desc  string             `bson:"desc,omitempty"`
+// 	Time  string             `bson:"time,omitempty"`
+// }
 
 func GetNoteById(w http.ResponseWriter, r *http.Request) {
 
@@ -64,7 +65,7 @@ func GetNoteById(w http.ResponseWriter, r *http.Request) {
 	filter := bson.D{{"_id", objectID}}
 
 	// Retrieves the first matching document
-	var result Notes
+	var result models.Notes
 	err = coll.FindOne(context.TODO(), filter).Decode(&result)
 
 	// Prints a message if no documents are matched or if any
@@ -119,7 +120,7 @@ func GetNotes(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Cursor: ", cursor)
 	for cursor.Next(context.TODO()) {
-		var result Notes
+		var result models.Notes
 		if err := cursor.Decode(&result); err != nil {
 			panic(err)
 		}
@@ -167,7 +168,7 @@ func DeleteNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filter := bson.D{{"_id", objectID}}
-	var deletedDocument Notes
+	var deletedDocument models.Notes
 	err = coll.FindOneAndDelete(context.TODO(), filter).Decode(&deletedDocument)
 	if err != nil {
 		panic(err)
@@ -194,7 +195,7 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error reading request body", http.StatusBadRequest)
 	}
 
-	var note Notes
+	var note models.Notes
 	err = json.Unmarshal(body, &note)
 	if err != nil {
 		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
