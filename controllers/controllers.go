@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -184,4 +185,63 @@ func DeleteNote(w http.ResponseWriter, r *http.Request) {
 	// _ = json.NewDecoder(deleteResult).Decode(delNote)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(output)
+}
+
+func CreateNote(w http.ResponseWriter, r *http.Request) {
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Error reading request body", http.StatusBadRequest)
+	}
+
+	var note Notes
+	err = json.Unmarshal(body, &note)
+	if err != nil {
+		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+		return
+	}
+	note.Id = primitive.NewObjectID()
+
+	// Load env variables
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found")
+	}
+
+	uri := os.Getenv("MONGODB_URI")
+	if uri == "" {
+		log.Fatal("You must set your 'MONGODB_URI' environment variable")
+	}
+
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			log.Println("Error Disconnect from MongoDB: ", err)
+		}
+	}()
+
+	// make connection with MongoDB
+	coll := client.Database("sample_restaurants").Collection("restaurants")
+
+	// convert Go struct to BSON document
+	document, err := bson.Marshal(note)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = coll.InsertOne(context.TODO(), document)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Println("Inserted Doc: ", document)
+	fmt.Println("Inserted Doc: ", note)
+	fmt.Fprintf(w, "Inserted Document Successfully :")
+	jsonNote, err := json.Marshal(note)
+	if err != nil {
+		log.Fatal(err)
+	}
+	w.Write(jsonNote)
 }
