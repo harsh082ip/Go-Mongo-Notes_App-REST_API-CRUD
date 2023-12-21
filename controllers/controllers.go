@@ -85,3 +85,52 @@ func GetNoteById(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "pkglication/json")
 	w.Write(output)
 }
+
+func GetNotes(w http.ResponseWriter, r *http.Request) {
+
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file")
+	}
+
+	var uri string
+	if uri = os.Getenv("MONGODB_URI"); uri == "" {
+		log.Fatal("You must set your 'MONGODB_URI' environment variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
+	}
+
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if err = client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+
+	coll := client.Database("sample_restaurants").Collection("restaurants")
+	filter := bson.D{{}}
+
+	cursor, err := coll.Find(context.TODO(), filter)
+	if err != nil {
+		panic(err)
+	}
+	defer cursor.Close(context.TODO())
+
+	fmt.Println("Cursor: ", cursor)
+	for cursor.Next(context.TODO()) {
+		var result Notes
+		if err := cursor.Decode(&result); err != nil {
+			panic(err)
+		}
+
+		output, err := json.MarshalIndent(result, "", "    ")
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("%s\n", output)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(output)
+	}
+
+}
