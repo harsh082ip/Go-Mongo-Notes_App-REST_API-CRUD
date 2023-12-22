@@ -1,6 +1,6 @@
 module github.com/harsh082ip/Go-Mongo-Notes_App-REST_API-CRUD
 
-go 1.21.1
+go 1.18.1 
 
 require (
 	github.com/golang/snappy v0.0.1 // indirect
