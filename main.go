@@ -23,7 +23,7 @@ func main() {
 	r.HandleFunc("/updatenote/{id}", controllers.UpdateNote).Methods("POST")
 	r.HandleFunc("/deletenote/{id}", controllers.DeleteNote).Methods("GET")
 
-	fmt.Println("Starting Server at port 8084...")
+	fmt.Println("Starting Server at port 8083...")
 	log.Fatal(http.ListenAndServe(WEBPORT, r))
 	// controllers.GetNoteById()
 }
