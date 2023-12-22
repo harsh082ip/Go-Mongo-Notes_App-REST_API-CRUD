@@ -246,3 +246,155 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(jsonNote)
 }
+
+// func UpdateNote(w http.ResponseWriter, r *http.Request) {
+
+// 	id := mux.Vars(r)
+
+// 	body, err := io.ReadAll(r.Body)
+// 	if err != nil {
+// 		http.Error(w, "Error reading body", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	var updateFields map[string]interface{}
+// 	err = json.Unmarshal(body, &updateFields)
+// 	if err != nil {
+// 		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	if err := godotenv.Load(); err != nil {
+// 		log.Println("No .env file found")
+// 	}
+
+// 	uri := os.Getenv("MONGODB_URI")
+// 	if uri == "" {
+// 		log.Fatal("You must set your 'MONGODB_URI' environment variable")
+// 	}
+
+// 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	defer func() {
+// 		if err := client.Disconnect(context.TODO()); err != nil {
+// 			log.Fatal("Error Disconnect from MongoDB: ", err)
+// 		}
+// 	}()
+
+// 	coll := client.Database("sample_restaurants").Collection("restaurants")
+
+// 	objectID, err := primitive.ObjectIDFromHex(id["id"])
+// 	if err != nil {
+// 		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+// 	}
+
+// 	filter := bson.D{{"_id", objectID}}
+
+// 	update := bson.D{{"$set", updateFields}}
+
+// 	updateResult, err := coll.UpdateOne(context.TODO(), filter, update)
+// 	if err != nil {
+// 		http.Error(w, "Error Updating document", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	if updateResult.ModifiedCount == 0 {
+// 		http.Error(w, "No document updated", http.StatusNotFound)
+// 	}
+
+// 	var updatedDoc bson.M
+// 	err = coll.FindOne(context.TODO(), filter).Decode(&updatedDoc)
+// 	if err != nil {
+// 		http.Error(w, "Error retrieving updated document", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	w.Header().Set("Content-Type", "application/json")
+// 	responseJSON, err := json.Marshal(updatedDoc)
+// 	if err != nil {
+// 		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+// 		return
+// 	}
+// 	w.Write(responseJSON)
+// }
+
+func UpdateNote(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Error reading body", http.StatusBadRequest)
+		return
+	}
+
+	var updateFields map[string]interface{}
+	err = json.Unmarshal(body, &updateFields)
+	if err != nil {
+		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+		return
+	}
+
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found")
+	}
+
+	uri := os.Getenv("MONGODB_URI")
+	if uri == "" {
+		log.Fatal("You must set your 'MONGODB_URI' environment variable")
+	}
+
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			log.Fatal("Error Disconnect from MongoDB: ", err)
+		}
+	}()
+
+	coll := client.Database("sample_restaurants").Collection("restaurants")
+
+	objectID, err := primitive.ObjectIDFromHex(id["id"])
+	if err != nil {
+		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+	}
+
+	filter := bson.D{{"_id", objectID}}
+
+	// Convert map[string]interface{} to bson.D
+	updateDoc := bson.D{}
+	for key, value := range updateFields {
+		updateDoc = append(updateDoc, bson.E{Key: key, Value: value})
+	}
+
+	update := bson.D{{"$set", updateDoc}}
+
+	updateResult, err := coll.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		http.Error(w, "Error Updating document", http.StatusInternalServerError)
+		return
+	}
+
+	if updateResult.ModifiedCount == 0 {
+		http.Error(w, "No document updated", http.StatusNotFound)
+		return
+	}
+
+	var updatedDoc bson.M
+	err = coll.FindOne(context.TODO(), filter).Decode(&updatedDoc)
+	if err != nil {
+		http.Error(w, "Error retrieving updated document", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	responseJSON, err := json.Marshal(updatedDoc)
+	if err != nil {
+		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		return
+	}
+	w.Write(responseJSON)
+}
