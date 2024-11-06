@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	WEBPORT = ":27017"
+	WEBPORT = ":8083"
 )
 
 func main() {
@@ -22,6 +22,7 @@ func main() {
 	r.HandleFunc("/getnote/{id}", controllers.GetNoteById).Methods("GET")
 	r.HandleFunc("/updatenote/{id}", controllers.UpdateNote).Methods("POST")
 	r.HandleFunc("/deletenote/{id}", controllers.DeleteNote).Methods("GET")
+	r.HandleFunc("/health", controllers.Health)
 
 	fmt.Println("Starting Server at port 8083...")
 	log.Fatal(http.ListenAndServe(WEBPORT, r))

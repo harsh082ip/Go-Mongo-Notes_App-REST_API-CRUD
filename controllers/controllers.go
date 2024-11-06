@@ -325,3 +325,8 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(responseJSON)
 }
+
+func Health(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte("All Good!!"))
+}
